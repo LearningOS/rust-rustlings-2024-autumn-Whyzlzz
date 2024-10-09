@@ -19,19 +19,7 @@ struct Person {
 }
 
 // We will use this error type for the `FromStr` implementation.
-#[derive(Debug, PartialEq)]
-enum ParsePersonError {
-    // Empty input string
-    Empty,
-    // Incorrect number of fields
-    BadLen,
-    // Empty name field
-    NoName,
-    // Wrapped error from parse::<usize>()
-    ParseInt(ParseIntError),
-}
 
-// I AM NOT DONE
 
 // Steps:
 // 1. If the length of the provided string is 0, an error should be returned
@@ -49,9 +37,40 @@ enum ParsePersonError {
 // you want to return a string error message, you can do so via just using
 // return `Err("my error message".into())`.
 
+
+
+
+// We will use this error type for the `FromStr` implementation.
+#[derive(Debug, PartialEq)]
+enum ParsePersonError {
+    // Empty input string
+    Empty,
+    // Incorrect number of fields
+    BadLen,
+    // Empty name field
+    NoName,
+    // Wrapped error from parse::<usize>()
+    ParseInt(ParseIntError),
+}
+
 impl FromStr for Person {
     type Err = ParsePersonError;
     fn from_str(s: &str) -> Result<Person, Self::Err> {
+        if s.is_empty() { return  Err(ParsePersonError::Empty); }
+        let mut s = s.split(",");
+
+        let name = s.next().ok_or(ParsePersonError::Empty)?.trim().to_string();
+        if name.is_empty()  { return Err(ParsePersonError::NoName); }
+
+        let age = s.next().ok_or(ParsePersonError::BadLen)?.trim().to_string();
+
+        if let Some(_) = s.next() {
+            return Err(ParsePersonError::BadLen);
+        }
+
+        let age = age.parse::<usize>().map_err(|e| ParsePersonError::ParseInt(e))?;
+
+        Ok(Person{name,age})
     }
 }
 
